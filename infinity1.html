@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<body>
+    <canvas width="500" height="300" id="logoCanvas"></canvas>
+    <script>
+        const canvas = document.getElementById('logoCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Scaling and offset for inner and outer infinity shapes
+        const outerScale = 150;
+        const innerScale = 80;
+        // Center coordinates for the logo
+        const offsetX = canvas.width / 2;
+        const offsetY = canvas.height / 2;
+
+        // Number of rays
+        const numRays = 140;
+        let time = 0; // Time variable for animation
+
+        // Function to get points on the infinity shape
+        function getInfinityPoint(t, scale, offsetX, offsetY) {
+            const x = scale * (Math.sin(t) / (1 + Math.cos(t) ** 2)) + offsetX;
+            const y = scale * (Math.sin(t) * Math.cos(t) / (1 + Math.cos(t) ** 2)) + offsetY;
+            return { x, y };
+        }
+        
+        function interpolateColor(color1, color2, factor) {
+            const result = color1.slice();
+            for (let i = 0; i < 3; i++) {
+                result[i] = Math.round(result[i] + factor * (color2[i] - result[i]));
+            }
+            return `rgb(${result[0]}, ${result[1]}, ${result[2]})`;
+        }
+
+        function drawGradientLine(start, end, color) {
+            // Create a gradient from black to the pulsating color
+            const gradient = ctx.createLinearGradient(start.x, start.y, end.x, end.y);
+            gradient.addColorStop(0, color);    // Start with Pulsating color
+            gradient.addColorStop(1, 'black');  // end with black
+
+            ctx.beginPath();
+            ctx.moveTo(start.x, start.y);
+            ctx.lineTo(end.x, end.y);
+            ctx.strokeStyle = gradient;  // Apply gradient as stroke style
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.closePath();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas for redrawing
+            
+            // Calculate color pulsation
+            const factor = (Math.sin(time) + 1) / 2; // Factor oscillates between 0 and 1
+            const silver = [204, 204, 204]; // RGB for silver
+            const gold = [240, 215, 170];      // RGB for gold
+            const pulsatingColor = interpolateColor(silver, gold, factor);
+
+            // Draw rays with a phase shift to animate them
+            for (let i = 0; i < numRays; i++) {
+                const t = (i / numRays) * 2 * Math.PI + time/80; // Add time for animation
+                // Get start and end point (on the inner infinity shape)
+                const start = getInfinityPoint(t, innerScale, offsetX, offsetY);
+                const end = getInfinityPoint(t, outerScale, offsetX, offsetY);
+                drawGradientLine(start, end, pulsatingColor);
+            }
+
+            time += 0.03; // Increment time for smooth pulsation
+            requestAnimationFrame(draw); // Repeat the animation
+        }
+
+        draw(); // Start the animation
+    </script>
+</body>
+</html>
